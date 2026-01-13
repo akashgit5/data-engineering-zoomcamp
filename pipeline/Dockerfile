@@ -1,8 +1,25 @@
 # base Docker image that we will build on
-FROM python:3.13.11-slim
 
-# set up our image by installing prerequisites; pandas in this case
-RUN pip install pandas pyarrow
+# base image: Python slim
+FROM ubuntu:24.04
+
+# install OpenJDK 17, Python3 and pip via apt
+RUN apt-get update \
+	 && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+		 openjdk-17-jdk python3 python3-pip python3-venv ca-certificates wget \
+	 && rm -rf /var/lib/apt/lists/*
+
+# set JAVA_HOME for tools
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+# set up our Python dependencies
+RUN python3 -m venv /opt/venv \
+	&& /opt/venv/bin/pip install --upgrade pip setuptools wheel \
+	&& /opt/venv/bin/pip install --no-cache-dir pandas pyarrow pyspark
+
+# use virtualenv python as default
+ENV PATH="/opt/venv/bin:$PATH"
 
 # set up the working directory inside the container
 WORKDIR /app
@@ -10,5 +27,4 @@ WORKDIR /app
 COPY pipeline.py pipeline.py
 
 # define what to do first when the container runs
-# in this example, we will just run the script
-ENTRYPOINT ["python", "pipeline.py"]
+ENTRYPOINT ["python3", "pipeline.py"]

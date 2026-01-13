@@ -91,3 +91,15 @@ services:
       kestra_postgres:
         condition: service_started
     
+  pipeline:
+    build:
+      context: ./pipeline
+      dockerfile: Dockerfile
+    image: data-engineering-zoomcamp-pipeline:latest
+    restart: "no"
+    working_dir: /app
+    volumes:
+      - ./pipeline:/app
+    command: ["python3", "pipeline.py"]
+    depends_on:
+      - pgdatabase
